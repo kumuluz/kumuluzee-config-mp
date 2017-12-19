@@ -143,6 +143,7 @@ public class ConfigImpl implements Config {
     }
 
     private Converter getConverter(Class asType) {
+
         if (asType.equals(boolean.class)) {
             asType = Boolean.class;
         } else if (asType.equals(double.class)) {
@@ -156,9 +157,11 @@ public class ConfigImpl implements Config {
         }
 
         Converter converter = converters.get(asType);
+
         if (converter == null) {
             throw new IllegalArgumentException("No Converter registered for class " + asType);
         }
+
         return converter;
     }
 

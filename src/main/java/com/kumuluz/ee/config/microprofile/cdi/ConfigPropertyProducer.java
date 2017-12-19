@@ -41,7 +41,7 @@ public class ConfigPropertyProducer {
 
     @Dependent
     @ConfigProperty
-    public static final Object getGenericProperty(InjectionPoint ip) {
+    public static Object getGenericProperty(InjectionPoint ip) {
 
         ConfigProperty configPropertyAnnotation = ip.getAnnotated().getAnnotation(ConfigProperty.class);
         String configurationPropertyKey = configPropertyAnnotation.name();
