@@ -65,7 +65,8 @@ public class MicroprofileConfigExtension implements ConfigExtension {
         // load MicroProfile configuration source providers
         ServiceLoader<ConfigSourceProvider> configSourceProviderSL = ServiceLoader.load(ConfigSourceProvider.class);
         for (ConfigSourceProvider configSourceProvider : configSourceProviderSL) {
-            for (ConfigSource configSource : configSourceProvider.getConfigSources(null)) {
+            for (ConfigSource configSource : configSourceProvider
+                    .getConfigSources(MicroprofileConfigExtension.class.getClassLoader())) {
                 configurationSources.add(new ConfigurationSourceAdapter(configSource));
             }
         }

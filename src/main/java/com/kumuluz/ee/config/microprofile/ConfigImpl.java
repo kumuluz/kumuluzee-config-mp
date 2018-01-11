@@ -27,11 +27,14 @@ import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.eclipse.microprofile.config.spi.Converter;
 
 import javax.annotation.Priority;
+import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.time.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Microprofile Config implementation that exposes KumuluzEE configuration framework.
@@ -40,10 +43,12 @@ import java.util.*;
  * @author Jan Meznarič
  * @since 1.1
  */
-public class ConfigImpl implements Config {
+public class ConfigImpl implements Config, Serializable {
 
     private Map<Type, Converter> converters = new HashMap<>();
     private ConfigurationUtil configurationUtil = ConfigurationUtil.getInstance();
+
+    private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",");
 
     public ConfigImpl() {
         registerDefaultConverters();
@@ -65,6 +70,7 @@ public class ConfigImpl implements Config {
         converters.put(OffsetDateTime.class, OffsetDateTimeConverter.INSTANCE);
         converters.put(OffsetTime.class, OffsetTimeConverter.INSTANCE);
         converters.put(Instant.class, InstantConverter.INSTANCE);
+        converters.put(Class.class, ClassConverter.INSTANCE);
 
         // additional converters
         converters.put(String.class, StringConverter.INSTANCE);
@@ -112,37 +118,61 @@ public class ConfigImpl implements Config {
 
         String value = configurationUtil.get(propertyName).orElse(null);
 
-        if (value != null && value.length() == 0) {
-            value = null;
-        }
-
         return Optional.ofNullable(convert(value, asType));
     }
 
     @Override
     public <T> T getValue(String propertyName, Class<T> propertyType) {
 
-        String value = configurationUtil.get(propertyName).orElse(null);
+        Optional<T> valueOpt = getOptionalValue(propertyName, propertyType);
 
-        if (value == null) {
+        if (!valueOpt.isPresent()) {
             throw new NoSuchElementException("No configured value found for config key " + propertyName);
         }
 
-        return convert(value, propertyType);
+        return valueOpt.get();
     }
 
 
+    @SuppressWarnings("unchecked")
     public <T> T convert(String value, Class<T> asType) {
 
-        if (value != null) {
-            Converter<T> converter = getConverter(asType);
-            return converter.convert(value);
+        if (value == null) {
+            return null;
         }
 
-        return null;
+        if (asType.isArray()) {
+            Class<?> arrayType = asType.getComponentType();
+            List a = convertList(value, arrayType);
+            Object arr = Array.newInstance(arrayType, a.size());
+            for (int i = 0; i < a.size(); i++) {
+                Array.set(arr, i, a.get(i));
+            }
+
+            return (T)arr;
+        }
+
+        Converter<T> converter = getConverter(asType);
+        return converter.convert(value);
     }
 
-    private Converter getConverter(Class asType) {
+    public <T> List<T> convertList(String value, Class<T> listType) {
+
+        String[] tokens = value.split(ARRAY_SEPARATOR_REGEX);
+
+        Converter<T> converter = getConverter(listType);
+        List<T> convertedList = new ArrayList<>(tokens.length);
+
+        for (String token : tokens) {
+            token = token.replace("\\,", ",");
+            convertedList.add(converter.convert(token));
+        }
+
+        return convertedList;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Converter<T> getConverter(Class asType) {
 
         if (asType.equals(boolean.class)) {
             asType = Boolean.class;
@@ -157,6 +187,11 @@ public class ConfigImpl implements Config {
         }
 
         Converter converter = converters.get(asType);
+
+        if (converter == null) {
+            // no registered converter, try to generate implicit converter
+            converter = ImplicitConverter.getImplicitConverter(asType);
+        }
 
         if (converter == null) {
             throw new IllegalArgumentException("No Converter registered for class " + asType);
@@ -174,9 +209,5 @@ public class ConfigImpl implements Config {
     @Override
     public Iterable<ConfigSource> getConfigSources() {
         return null;
-    }
-
-    public Collection<Type> getConverterTypes() {
-        return converters.keySet();
     }
 }

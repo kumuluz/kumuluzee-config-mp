@@ -25,7 +25,7 @@ import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.DeploymentException;
 import javax.enterprise.inject.spi.InjectionPoint;
 import java.util.Optional;
@@ -42,34 +42,31 @@ public class ConfigPropertyProducer {
     @Dependent
     @ConfigProperty
     public static Object getGenericProperty(InjectionPoint ip) {
-
         ConfigProperty configPropertyAnnotation = ip.getAnnotated().getAnnotation(ConfigProperty.class);
+
+        // get config key
         String configurationPropertyKey = configPropertyAnnotation.name();
-        Class<?> configurationPropertyType = (Class<?>) ip.getType();
-
-        ConfigImpl config = (ConfigImpl) ConfigProvider.getConfig();
-        Object configurationPropertyValue;
-
         if (configurationPropertyKey.isEmpty()) {
 
-            // get bean class
-            Class beanClass;
-            Bean bean = ip.getBean();
-            if (bean == null) {
-                beanClass = ip.getMember().getDeclaringClass();
-            } else {
-                beanClass = bean.getBeanClass();
+            if (ip.getAnnotated() instanceof AnnotatedMember) {
+                AnnotatedMember member = (AnnotatedMember) ip.getAnnotated();
+                if (member.getDeclaringType() != null) {
+                    configurationPropertyKey = member.getDeclaringType().getJavaClass().getCanonicalName() + "." +
+                            member.getJavaMember().getName();
+                }
             }
-
-            configurationPropertyKey = beanClass.getPackage().getName() +
-                    '.' + beanClass.getSimpleName() + '.' + ip.getMember().getName();
         }
 
+        // get config value
+        ConfigImpl config = (ConfigImpl) ConfigProvider.getConfig();
+        Class<?> configurationPropertyType = (Class<?>) ip.getType();
         Optional resultOpt = config.getOptionalValue(configurationPropertyKey, configurationPropertyType);
 
+        Object configurationPropertyValue;
         if (resultOpt.isPresent()) {
             configurationPropertyValue = resultOpt.get();
         } else {
+            // no value found, try default value
             configurationPropertyValue = config.convert(configPropertyAnnotation.defaultValue(),
                     configurationPropertyType);
 
