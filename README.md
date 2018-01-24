@@ -104,6 +104,8 @@ that were requested. All converters from the MicroProfile Config specification a
 1. `Instant`
 1. `URL`
 1. `Class` (based on the result of `Class.forName`)
+1. Common sense converter (Tries to find class's constructor with a single string parameter or static methods
+   `valueOf(String)` or `parse(CharSequence)`)
 
 You can add custom converters by implementing
 the `org.eclipse.microprofile.config.spi.Converter` interface and registering your implementation in the
@@ -123,6 +125,40 @@ public class CustomerConverter implements Converter<Customer> {
 
 You can create multiple Converters for the same type. Converter with the highest priority will be used. Priority is
 read from the `@Priority` annotation.
+
+### Injection of arrays
+
+Injection of arrays is supported. Arrays are defined as comma separated values in the configuration values. For example,
+to define array in `microprofile-config.properties` file, add the following line:
+
+```properties
+mp.example-string-array=first,second,third\\,still_third
+```
+
+The commas can be escaped with the backslash character (in .properties files, the backslash character must be escaped
+itself as shown above). Also note, that converters are applied to each array element, which means that array types are
+not limited only to `String`.
+
+To inject the property defined above, use the following code:
+
+```java
+@Inject
+@ConfigProperty(name = "mp.example-string-array")
+private String[] strings;
+```
+
+Injection of `Set` and `List` is also supported:
+
+```java
+@Inject
+@ConfigProperty(name = "mp.example-string-array")
+List<String> stringsAsList;
+
+@Inject
+@ConfigProperty(name = "mp.example-string-array")
+Set<String> stringsAsSet;
+```
+
 
 ### Adding custom configuration sources
 
