@@ -3,8 +3,8 @@
 
 > KumuluzEE Config MicroProfile extension provides you with a complete Eclipse MicroProfile Feature implementation for configuring your applications.
 
-KumuluzEE MicroProfile Config 1.1 implements the 
-[MicroProfile Config](https://microprofile.io/project/eclipse/microprofile-config) 1.1 API.
+KumuluzEE MicroProfile Config 1.2 implements the 
+[MicroProfile Config](https://microprofile.io/project/eclipse/microprofile-config) 1.2 API.
 
 KumuluzEE MicroProfile Config contains APIs for accessing the configuration values from 
 [KumuluzEE Configuration framework](https://github.com/kumuluz/kumuluzee/wiki/Configuration) and adding custom
@@ -18,7 +18,7 @@ MicroProfile Config API can be enabled by adding the following Maven dependency:
 <dependency>
     <groupId>com.kumuluz.ee.config</groupId>
     <artifactId>kumuluzee-config-mp</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.2.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -103,6 +103,7 @@ that were requested. All converters from the MicroProfile Config specification a
 1. `OffsetTime`
 1. `Instant`
 1. `URL`
+1. `Class` (based on the result of `Class.forName`)
 
 You can add custom converters by implementing
 the `org.eclipse.microprofile.config.spi.Converter` interface and registering your implementation in the
