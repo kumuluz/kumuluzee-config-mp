@@ -24,7 +24,7 @@
 
         <kumuluzee.version>2.5.1</kumuluzee.version>
 
-        <microprofile-config.version>1.1</microprofile-config.version>
+        <microprofile-config.version>1.2.1</microprofile-config.version>
 
         <maven-compiler-plugin.version>3.6.1</maven-compiler-plugin.version>
         <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
