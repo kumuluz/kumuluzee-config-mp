@@ -20,7 +20,7 @@
  */
 package com.kumuluz.ee.config.microprofile;
 
-import com.kumuluz.ee.arquillian.container.spi.MavenDependencyAppender;
+import com.kumuluz.ee.testing.arquillian.spi.MavenDependencyAppender;
 
 import java.util.ArrayList;
 import java.util.List;
