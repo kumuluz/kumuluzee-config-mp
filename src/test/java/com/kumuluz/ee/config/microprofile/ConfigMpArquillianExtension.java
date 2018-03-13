@@ -27,7 +27,7 @@ import org.jboss.arquillian.core.spi.LoadableExtension;
  * Registers {@link ConfigMpLibraryAppender} with the Arquillian.
  *
  * @author Urban Malc
- * @since 1.0.0
+ * @since 1.2.0
  */
 public class ConfigMpArquillianExtension implements LoadableExtension {
 
