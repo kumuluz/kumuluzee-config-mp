@@ -20,7 +20,6 @@
                 <methods>
                     <exclude name="testGetConfigSources"/>
                     <exclude name="testGetPropertyNames"/>
-                    <exclude name="testEnvironmentConfigSource"/> <!-- TODO remove when fix is available -->
                 </methods>
             </class>
             <class name="org.eclipse.microprofile.config.tck.ConverterTest">

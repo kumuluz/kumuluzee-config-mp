@@ -152,6 +152,9 @@
                     <suiteXmlFiles>
                         <suiteXmlFile>tck-suite.xml</suiteXmlFile>
                     </suiteXmlFiles>
+                    <environmentVariables>
+                        <lowercase>test123</lowercase> <!-- test if lowercase key is accepted -->
+                    </environmentVariables>
                 </configuration>
             </plugin>
         </plugins>
