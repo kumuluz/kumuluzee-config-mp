@@ -18,7 +18,7 @@ MicroProfile Config API can be enabled by adding the following Maven dependency:
 <dependency>
     <groupId>com.kumuluz.ee.config</groupId>
     <artifactId>kumuluzee-config-mp</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>${kumuluzee-config-mp.version}</version>
 </dependency>
 ```
 
