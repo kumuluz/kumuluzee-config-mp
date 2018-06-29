@@ -34,7 +34,8 @@ import java.util.ResourceBundle;
  */
 public class DependencyAppender implements MavenDependencyAppender {
 
-    private static final ResourceBundle versionsBundle = ResourceBundle.getBundle("META-INF/kumuluzee/versions");
+    private static final ResourceBundle versionsBundle = ResourceBundle
+            .getBundle("META-INF/kumuluzee/config-mp/versions");
 
     @Override
     public List<String> addLibraries() {
@@ -43,7 +44,8 @@ public class DependencyAppender implements MavenDependencyAppender {
 
         libs.add("org.eclipse.microprofile.config:microprofile-config-api:" +
                 versionsBundle.getString("microprofile-config-version"));
-        libs.add("org.hamcrest:hamcrest-all:" + versionsBundle.getString("hamcrest-version"));
+        libs.add("org.hamcrest:hamcrest-all:" +
+                versionsBundle.getString("hamcrest-version"));
 
         return libs;
     }
