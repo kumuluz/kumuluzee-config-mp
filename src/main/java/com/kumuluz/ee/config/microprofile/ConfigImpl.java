@@ -118,7 +118,14 @@ public class ConfigImpl implements Config, Serializable {
 
         String value = configurationUtil.get(propertyName).orElse(null);
 
-        return Optional.ofNullable(convert(value, asType));
+        T convertedValue;
+        try {
+            convertedValue = convert(value, asType);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Could not convert value " + value + " to type " + asType, e);
+        }
+
+        return Optional.ofNullable(convertedValue);
     }
 
     @Override
