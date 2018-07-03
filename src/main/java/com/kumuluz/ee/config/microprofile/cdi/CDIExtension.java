@@ -29,10 +29,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.*;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Extension validates if all @{@link ConfigProperty} values are present at startup and initializes ConfigProperty
@@ -45,6 +42,7 @@ import java.util.Set;
 public class CDIExtension implements Extension {
 
     private static final Set<Type> IGNORED_TYPES = new HashSet<>();
+    private static final Map<Type, Type> ALTERNATIVE_TYPES = new HashMap<>();
 
     static {
         // producers for following types are defined in com.kumuluz.ee.config.microprofile.cdi.ConfigInjectionProducer
@@ -53,11 +51,12 @@ public class CDIExtension implements Extension {
         IGNORED_TYPES.add(Set.class);
 
         // ignore primitive types, since CDI already correctly maps them
-        IGNORED_TYPES.add(boolean.class);
-        IGNORED_TYPES.add(int.class);
-        IGNORED_TYPES.add(long.class);
-        IGNORED_TYPES.add(float.class);
-        IGNORED_TYPES.add(double.class);
+        // this ensures that producers don't overlap (eg. one for boolean.class and one for Boolean.class)
+        ALTERNATIVE_TYPES.put(boolean.class, Boolean.class);
+        ALTERNATIVE_TYPES.put(int.class, Integer.class);
+        ALTERNATIVE_TYPES.put(long.class, Long.class);
+        ALTERNATIVE_TYPES.put(float.class, Float.class);
+        ALTERNATIVE_TYPES.put(double.class, Double.class);
     }
 
     private Set<InjectionPoint> injectionPoints = new HashSet<>();
@@ -121,9 +120,11 @@ public class CDIExtension implements Extension {
                     if (t instanceof ParameterizedType) {
                         t = ((ParameterizedType) t).getActualTypeArguments()[0];
                     }
-                    if (!IGNORED_TYPES.contains(t)) {
-                        types.add(t);
+                    if (IGNORED_TYPES.contains(t)) {
+                        continue;
                     }
+                    // if mapping to alternative type is present, use alternative instead
+                    types.add(ALTERNATIVE_TYPES.getOrDefault(t, t));
                 }
 
                 for (final Type converterType : types) {

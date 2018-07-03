@@ -51,8 +51,15 @@ public class ImplicitMethodConverter<T> extends ImplicitConverter<T> {
         method = null;
 
         try {
-            method = getConverterMethod(tClass, "valueOf", String.class);
+            method = getConverterMethod(tClass, "of", String.class);
         } catch (NoSuchMethodException ignored) {
+        }
+
+        if (method == null) {
+            try {
+                method = getConverterMethod(tClass, "valueOf", String.class);
+            } catch (NoSuchMethodException ignored) {
+            }
         }
 
         if (method == null) {
