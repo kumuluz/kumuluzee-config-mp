@@ -31,8 +31,6 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.net.URL;
-import java.time.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -63,18 +61,7 @@ public class ConfigImpl implements Config, Serializable {
         converters.put(Long.class, LongConverter.INSTANCE);
         converters.put(Float.class, FloatConverter.INSTANCE);
         converters.put(Double.class, DoubleConverter.INSTANCE);
-        converters.put(Duration.class, DurationConverter.INSTANCE);
-        converters.put(LocalTime.class, LocalTimeConverter.INSTANCE);
-        converters.put(LocalDate.class, LocalDateConverter.INSTANCE);
-        converters.put(LocalDateTime.class, LocalDateTimeConverter.INSTANCE);
-        converters.put(OffsetDateTime.class, OffsetDateTimeConverter.INSTANCE);
-        converters.put(OffsetTime.class, OffsetTimeConverter.INSTANCE);
-        converters.put(Instant.class, InstantConverter.INSTANCE);
         converters.put(Class.class, ClassConverter.INSTANCE);
-
-        // additional converters
-        converters.put(String.class, StringConverter.INSTANCE);
-        converters.put(URL.class, URLConverter.INSTANCE);
     }
 
     private void registerDiscoveredConverters() {
