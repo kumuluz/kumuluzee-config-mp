@@ -1,0 +1,96 @@
+/*
+ *  Copyright (c) 2014-2017 Kumuluz and/or its affiliates
+ *  and other contributors as indicated by the @author tags and
+ *  the contributor list.
+ *
+ *  Licensed under the MIT License (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  https://opensource.org/licenses/MIT
+ *
+ *  The software is provided "AS IS", WITHOUT WARRANTY OF ANY KIND, express or
+ *  implied, including but not limited to the warranties of merchantability,
+ *  fitness for a particular purpose and noninfringement. in no event shall the
+ *  authors or copyright holders be liable for any claim, damages or other
+ *  liability, whether in an action of contract, tort or otherwise, arising from,
+ *  out of or in connection with the software or the use or other dealings in the
+ *  software. See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+package com.kumuluz.ee.config.microprofile.adapters;
+
+import com.kumuluz.ee.configuration.ConfigurationSource;
+import org.eclipse.microprofile.config.spi.ConfigSource;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Adapts KumuluzEE configuration framework {@link ConfigurationSource} to MicroProfile Config {@link ConfigSource}.
+ *
+ * @author Urban Malc
+ * @since 1.3
+ */
+public class ConfigSourceAdapter implements ConfigSource {
+
+    private ConfigurationSource configurationSource;
+
+    public ConfigSourceAdapter(ConfigurationSource configurationSource) {
+        this.configurationSource = configurationSource;
+    }
+
+    @Override
+    public Map<String, String> getProperties() {
+        if (configurationSource instanceof ConfigurationSourceAdapter) {
+            return ((ConfigurationSourceAdapter) configurationSource).getConfigSource().getProperties();
+        }
+
+        return buildPropertiesMap();
+    }
+
+    @Override
+    public int getOrdinal() {
+        return configurationSource.getOrdinal();
+    }
+
+    @Override
+    public String getValue(String s) {
+        return configurationSource.get(s).orElse(null);
+    }
+
+    @Override
+    public String getName() {
+        return configurationSource.getClass().getName();
+    }
+
+    private Map<String, String> buildPropertiesMap() {
+        Map<String, String> properties = new HashMap<>();
+        buildPropertiesMap(properties, "");
+        return properties;
+    }
+
+    private void buildPropertiesMap(Map<String, String> map, String prefix) {
+        Optional<List<String>> mapKeys = this.configurationSource.getMapKeys(prefix);
+
+        if (mapKeys.isPresent()) {
+            String nextPrefix = (prefix.isEmpty()) ? "" : prefix + ".";
+            for (String s : mapKeys.get()) {
+                buildPropertiesMap(map, nextPrefix + s);
+            }
+        } else if (!prefix.isEmpty()) {
+            Optional<Integer> listSize = this.configurationSource.getListSize(prefix);
+
+            if (listSize.isPresent()) {
+                for (int i = 0; i < listSize.get(); i++) {
+                    buildPropertiesMap(map, prefix + "[" + i + "]");
+                }
+            } else {
+                Optional<String> value = this.configurationSource.get(prefix);
+                value.ifPresent(s -> map.put(prefix, s));
+            }
+        }
+    }
+}

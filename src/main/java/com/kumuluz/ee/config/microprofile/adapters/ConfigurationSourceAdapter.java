@@ -18,7 +18,7 @@
  *  software. See the License for the specific language governing permissions and
  *  limitations under the License.
 */
-package com.kumuluz.ee.config.microprofile;
+package com.kumuluz.ee.config.microprofile.adapters;
 
 import com.kumuluz.ee.configuration.ConfigurationSource;
 import com.kumuluz.ee.configuration.utils.ConfigurationDispatcher;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Adapts MicroProfile Config ConfigSource to KumuluzEE configuration framework ConfigurationSource
+ * Adapts MicroProfile Config {@link ConfigSource} to KumuluzEE configuration framework {@link ConfigurationSource}.
  *
  * @author Urban Malc
  * @author Jan Meznarič
@@ -40,6 +40,10 @@ public class ConfigurationSourceAdapter implements ConfigurationSource {
 
     public ConfigurationSourceAdapter(ConfigSource configSource) {
         this.configSource = configSource;
+    }
+
+    public ConfigSource getConfigSource() {
+        return configSource;
     }
 
     @Override

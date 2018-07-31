@@ -20,16 +20,14 @@
 */
 package com.kumuluz.ee.config.microprofile;
 
-import com.kumuluz.ee.config.microprofile.converters.*;
-import com.kumuluz.ee.configuration.utils.ConfigurationUtil;
+import com.kumuluz.ee.config.microprofile.converters.ImplicitConverter;
+import com.kumuluz.ee.config.microprofile.utils.AlternativeTypesUtil;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.eclipse.microprofile.config.spi.Converter;
 
-import javax.annotation.Priority;
 import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -43,67 +41,28 @@ import java.util.regex.Pattern;
  */
 public class ConfigImpl implements Config, Serializable {
 
-    private Map<Type, Converter> converters = new HashMap<>();
-    private ConfigurationUtil configurationUtil = ConfigurationUtil.getInstance();
+    private Map<Type, Converter> converters;
+    private List<ConfigSource> configSources;
 
     private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",");
 
-    public ConfigImpl() {
-        registerDefaultConverters();
-        registerDiscoveredConverters();
-    }
-
-    private void registerDefaultConverters() {
-
-        // build-in converters according to specification
-        converters.put(Boolean.class, BooleanConverter.INSTANCE);
-        converters.put(Integer.class, IntegerConverter.INSTANCE);
-        converters.put(Long.class, LongConverter.INSTANCE);
-        converters.put(Float.class, FloatConverter.INSTANCE);
-        converters.put(Double.class, DoubleConverter.INSTANCE);
-        converters.put(Class.class, ClassConverter.INSTANCE);
-    }
-
-    private void registerDiscoveredConverters() {
-
-        // load Converters
-        ServiceLoader<Converter> serviceLoader = ServiceLoader.load(Converter.class);
-
-        for (Converter converter : serviceLoader) {
-            Type types[] = converter.getClass().getGenericInterfaces();
-            for (Type type : types) {
-                if (type instanceof ParameterizedType) {
-                    Type args[] = ((ParameterizedType) type).getActualTypeArguments();
-                    if (args.length == 1) {
-                        Type cType = args[0];
-                        Converter old = converters.get(cType);
-                        if (old != null) {
-                            if (getPriority(converter) > getPriority(old)) {
-                                this.converters.put(cType, converter);
-                            }
-                        } else {
-                            this.converters.put(cType, converter);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private int getPriority(Converter converter) {
-
-        int result = 100;
-        Priority annotation = converter.getClass().getAnnotation(Priority.class);
-        if (annotation != null) {
-            result = annotation.value();
-        }
-        return result;
+    public ConfigImpl(List<ConfigSource> configSources, Map<Type, Converter> converters) {
+        this.configSources = configSources;
+        this.converters = converters;
     }
 
     @Override
     public <T> Optional<T> getOptionalValue(String propertyName, Class<T> asType) {
 
-        String value = configurationUtil.get(propertyName).orElse(null);
+        String value = null;
+
+        for (ConfigSource cs : this.configSources) {
+            value = cs.getValue(propertyName);
+
+            if (value != null) {
+                break;
+            }
+        }
 
         T convertedValue;
         try {
@@ -168,17 +127,7 @@ public class ConfigImpl implements Config, Serializable {
     @SuppressWarnings("unchecked")
     private <T> Converter<T> getConverter(Class asType) {
 
-        if (asType.equals(boolean.class)) {
-            asType = Boolean.class;
-        } else if (asType.equals(double.class)) {
-            asType = Double.class;
-        } else if (asType.equals(float.class)) {
-            asType = Float.class;
-        } else if (asType.equals(int.class)) {
-            asType = Integer.class;
-        } else if (asType.equals(long.class)) {
-            asType = Long.class;
-        }
+        asType = (Class) AlternativeTypesUtil.getTypeFromPrimitive(asType).orElse(asType);
 
         Converter converter = converters.get(asType);
 
@@ -202,6 +151,6 @@ public class ConfigImpl implements Config, Serializable {
 
     @Override
     public Iterable<ConfigSource> getConfigSources() {
-        return null;
+        return this.configSources;
     }
 }

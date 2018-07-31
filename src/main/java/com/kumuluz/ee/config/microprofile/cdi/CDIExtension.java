@@ -21,6 +21,7 @@
 package com.kumuluz.ee.config.microprofile.cdi;
 
 import com.kumuluz.ee.config.microprofile.ConfigImpl;
+import com.kumuluz.ee.config.microprofile.utils.AlternativeTypesUtil;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -42,21 +43,12 @@ import java.util.*;
 public class CDIExtension implements Extension {
 
     private static final Set<Type> IGNORED_TYPES = new HashSet<>();
-    private static final Map<Type, Type> ALTERNATIVE_TYPES = new HashMap<>();
 
     static {
         // producers for following types are defined in com.kumuluz.ee.config.microprofile.cdi.ConfigInjectionProducer
         IGNORED_TYPES.add(Optional.class);
         IGNORED_TYPES.add(List.class);
         IGNORED_TYPES.add(Set.class);
-
-        // ignore primitive types, since CDI already correctly maps them
-        // this ensures that producers don't overlap (eg. one for boolean.class and one for Boolean.class)
-        ALTERNATIVE_TYPES.put(boolean.class, Boolean.class);
-        ALTERNATIVE_TYPES.put(int.class, Integer.class);
-        ALTERNATIVE_TYPES.put(long.class, Long.class);
-        ALTERNATIVE_TYPES.put(float.class, Float.class);
-        ALTERNATIVE_TYPES.put(double.class, Double.class);
     }
 
     private Set<InjectionPoint> injectionPoints = new HashSet<>();
@@ -123,8 +115,9 @@ public class CDIExtension implements Extension {
                     if (IGNORED_TYPES.contains(t)) {
                         continue;
                     }
-                    // if mapping to alternative type is present, use alternative instead
-                    types.add(ALTERNATIVE_TYPES.getOrDefault(t, t));
+                    // ignore primitive types, since CDI already correctly maps them
+                    // this ensures that producers don't overlap (eg. one for boolean.class and one for Boolean.class)
+                    types.add(AlternativeTypesUtil.getTypeFromPrimitive(t).orElse(t));
                 }
 
                 for (final Type converterType : types) {

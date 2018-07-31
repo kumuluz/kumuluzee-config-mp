@@ -17,58 +17,42 @@
  *  out of or in connection with the software or the use or other dealings in the
  *  software. See the License for the specific language governing permissions and
  *  limitations under the License.
-*/
-package com.kumuluz.ee.config.microprofile;
+ */
+package com.kumuluz.ee.config.microprofile.tests;
 
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.spi.ConfigBuilder;
-import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
+import org.eclipse.microprofile.config.spi.ConfigSource;
 
+import java.util.Map;
 
 /**
- * Microprofile Config provider.
+ * Simple config source, returning one value.
  *
  * @author Urban Malc
- * @author Jan Meznarič
- * @since 1.1
+ * @since 1.3
  */
-public class DefaultConfigProvider extends ConfigProviderResolver {
-
-    private Config instance = null;
+public class SimpleConfigSource implements ConfigSource {
 
     @Override
-    public Config getConfig() {
-        return getConfig(null);
+    public Map<String, String> getProperties() {
+        return null;
     }
 
-
     @Override
-    public Config getConfig(ClassLoader forClassLoader) {
-
-        if (instance == null) {
-            instance = getBuilder().addDefaultSources().addDiscoveredSources().addDiscoveredConverters().build();
+    public String getValue(String s) {
+        if (s.equals("kumuluz.integration.test")) {
+            return "ok";
         }
 
-        return instance;
+        return null;
     }
 
     @Override
-    public void registerConfig(Config config, ClassLoader forClassLoader) {
-        instance = config;
+    public String getName() {
+        return "Integration test source";
     }
 
     @Override
-    public ConfigBuilder getBuilder() {
-        return new ConfigBuilderImpl();
-    }
-
-
-    @Override
-    public void releaseConfig(Config config) {
-
-        if (instance == config) {
-            instance = null;
-        }
-
+    public int getOrdinal() {
+        return 100;
     }
 }

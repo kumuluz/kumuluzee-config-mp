@@ -2,35 +2,11 @@
 
 <suite name="microprofile-config-TCK" verbose="2" configfailurepolicy="continue" >
 
-    <test name="microprofile-config 1.1 TCK">
+    <test name="microprofile-config TCK">
         <packages>
-            <package name="org.eclipse.microprofile.config.tck.*">
-            </package>
+            <package name="org.eclipse.microprofile.config.tck.*"/>
+            <package name="com.kumuluz.ee.config.microprofile.tests.*"/>
         </packages>
-        <classes>
-            <!-- Exclude all tests which use ConfigBuilder and getConfigSources -->
-            <class name="org.eclipse.microprofile.config.tck.AutoDiscoveredConfigSourceTest">
-                <methods>
-                    <exclude name="testAutoDiscoveredConfigureSources"/>
-                    <exclude name="testAutoDiscoveredConverterManuallyAdded"/>
-                    <exclude name="testAutoDiscoveredConverterNotAddedAutomatically"/>
-                </methods>
-            </class>
-            <class name="org.eclipse.microprofile.config.tck.ConfigProviderTest">
-                <methods>
-                    <exclude name="testGetConfigSources"/>
-                    <exclude name="testGetPropertyNames"/>
-                    <exclude name="testEnvironmentConfigSource"/>
-                </methods>
-            </class>
-            <class name="org.eclipse.microprofile.config.tck.ConverterTest">
-                <methods>
-                    <exclude name="testDonaldConversionWithLambdaConverter"/>
-                    <exclude name="testDonaldConversionWithMultipleLambdaConverters"/>
-                    <exclude name="testDuckConversionWithMultipleConverters"/>
-                </methods>
-            </class>
-        </classes>
     </test>
 
 </suite>
