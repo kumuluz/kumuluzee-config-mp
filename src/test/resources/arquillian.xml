@@ -5,8 +5,7 @@
 
     <container qualifier="KumuluzEE" default="true">
         <configuration>
-            <property name="deleteTemporaryFiles">true</property>
-            <property name="kumuluzVersion">3.0.0-SNAPSHOT</property>
+            <!--<property name="deleteTemporaryFiles">true</property>-->
         </configuration>
     </container>
 
