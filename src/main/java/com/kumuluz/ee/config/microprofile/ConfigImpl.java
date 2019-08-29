@@ -30,21 +30,27 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Microprofile Config implementation that exposes KumuluzEE configuration framework.
  *
  * @author Urban Malc
  * @author Jan Meznarič
+ * @author Yog Sothoth
  * @since 1.1
  */
 public class ConfigImpl implements Config, Serializable {
+	private static final Logger logger = Logger.getLogger(ConfigImpl.class.getCanonicalName());
 
     private Map<Type, Converter> converters;
     private List<ConfigSource> configSources;
 
     private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",");
+	private static final String ARRAY_LEAD_TRAIL_CHARS = "[\\s\\[\\]]";
 
     public ConfigImpl(List<ConfigSource> configSources, Map<Type, Converter> converters) {
         this.configSources = configSources;
@@ -111,7 +117,7 @@ public class ConfigImpl implements Config, Serializable {
 
     public <T> List<T> convertList(String value, Class<T> listType) {
 
-        String[] tokens = value.split(ARRAY_SEPARATOR_REGEX);
+		String[] tokens = value.replaceAll(ARRAY_LEAD_TRAIL_CHARS, "").split(ARRAY_SEPARATOR_REGEX);
 
         Converter<T> converter = getConverter(listType);
         List<T> convertedList = new ArrayList<>(tokens.length);
@@ -143,14 +149,28 @@ public class ConfigImpl implements Config, Serializable {
         return converter;
     }
 
+	@Override
+	public Iterable<String> getPropertyNames() {
+		return this.configSources.stream().flatMap(this::asStream).collect(Collectors.toSet());
+	}
 
-    @Override
-    public Iterable<String> getPropertyNames() {
-        return null;
-    }
+	@Override
+	public Iterable<ConfigSource> getConfigSources() {
+		return this.configSources;
+	}
 
-    @Override
-    public Iterable<ConfigSource> getConfigSources() {
-        return this.configSources;
-    }
+	/**
+	 * Streams this config source as property names
+	 * @param arg0 config source to stream
+	 * @return stream of property names, never null
+	 */
+	private Stream<String> asStream(ConfigSource arg0) {
+		try {
+			return arg0.getPropertyNames().stream();
+		}
+		catch (Exception e) {
+			logger.warning("Config source " + arg0.getName() + " reported exception: " + e.getMessage());
+			return Collections.EMPTY_SET.stream();
+		}
+	}
 }
