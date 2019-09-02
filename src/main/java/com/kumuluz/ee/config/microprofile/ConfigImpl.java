@@ -49,7 +49,7 @@ public class ConfigImpl implements Config, Serializable {
     private Map<Type, Converter> converters;
     private List<ConfigSource> configSources;
 
-    private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",") + "\\s";
+    private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",");
 
     public ConfigImpl(List<ConfigSource> configSources, Map<Type, Converter> converters) {
         this.configSources = configSources;

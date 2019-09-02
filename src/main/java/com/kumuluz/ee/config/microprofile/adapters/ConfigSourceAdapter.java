@@ -20,13 +20,15 @@
  */
 package com.kumuluz.ee.config.microprofile.adapters;
 
-import com.kumuluz.ee.configuration.ConfigurationSource;
-import org.eclipse.microprofile.config.spi.ConfigSource;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
+
+import org.eclipse.microprofile.config.spi.ConfigSource;
+
+import com.kumuluz.ee.configuration.ConfigurationSource;
 
 /**
  * Adapts KumuluzEE configuration framework {@link ConfigurationSource} to MicroProfile Config {@link ConfigSource}.
@@ -35,6 +37,7 @@ import java.util.Optional;
  * @since 1.3
  */
 public class ConfigSourceAdapter implements ConfigSource {
+    private static String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",") + "\\s";    
 
     private ConfigurationSource configurationSource;
 
@@ -55,14 +58,14 @@ public class ConfigSourceAdapter implements ConfigSource {
     public int getOrdinal() {
         return configurationSource.getOrdinal();
     }
-
+    
     @Override
     public String getValue(String s) {
     	String val = configurationSource.get(s).orElse(null);
     	
     	if (configurationSource.getListSize(s).orElse(0) > 0) {
-    		//this is a list or an array and leading/trailing "[", "]" must be removed
-    		return val.subSequence(1, val.length() - 1).toString();
+    		//this is a list or an array and leading/trailing "[", "]" as well as \\s after "," must be removed
+    		return val.subSequence(1, val.length() - 1).toString().replaceAll(ARRAY_SEPARATOR_REGEX, ",");
     	}
     	
         return val;
