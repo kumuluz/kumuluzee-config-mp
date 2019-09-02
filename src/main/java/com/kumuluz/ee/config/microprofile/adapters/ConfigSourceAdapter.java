@@ -58,7 +58,14 @@ public class ConfigSourceAdapter implements ConfigSource {
 
     @Override
     public String getValue(String s) {
-        return configurationSource.get(s).orElse(null);
+    	String val = configurationSource.get(s).orElse(null);
+    	
+    	if (configurationSource.getListSize(s).orElse(0) > 0) {
+    		//this is a list or an array and leading/trailing "[", "]" must be removed
+    		return val.subSequence(1, val.length() - 1).toString();
+    	}
+    	
+        return val;
     }
 
     @Override

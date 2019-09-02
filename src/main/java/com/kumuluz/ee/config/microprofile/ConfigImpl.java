@@ -49,8 +49,7 @@ public class ConfigImpl implements Config, Serializable {
     private Map<Type, Converter> converters;
     private List<ConfigSource> configSources;
 
-    private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",");
-	private static final String ARRAY_LEAD_TRAIL_CHARS = "[\\s\\[\\]]";
+    private static final String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",") + "\\s";
 
     public ConfigImpl(List<ConfigSource> configSources, Map<Type, Converter> converters) {
         this.configSources = configSources;
@@ -117,7 +116,7 @@ public class ConfigImpl implements Config, Serializable {
 
     public <T> List<T> convertList(String value, Class<T> listType) {
 
-		String[] tokens = value.replaceAll(ARRAY_LEAD_TRAIL_CHARS, "").split(ARRAY_SEPARATOR_REGEX);
+		String[] tokens = value.split(ARRAY_SEPARATOR_REGEX);
 
         Converter<T> converter = getConverter(listType);
         List<T> convertedList = new ArrayList<>(tokens.length);
