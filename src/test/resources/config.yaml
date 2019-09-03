@@ -1,0 +1,6 @@
+parameter:
+  stringParameter: "[here be,  dragons]"
+  arrayParameter:
+    - "one "
+    - " two"
+    - " [three\\, four] "
