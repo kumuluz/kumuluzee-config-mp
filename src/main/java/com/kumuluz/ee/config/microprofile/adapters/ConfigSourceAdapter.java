@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.spi.ConfigSource;
 
@@ -34,11 +34,10 @@ import com.kumuluz.ee.configuration.ConfigurationSource;
  * Adapts KumuluzEE configuration framework {@link ConfigurationSource} to MicroProfile Config {@link ConfigSource}.
  *
  * @author Urban Malc
+ * @author Yog Sothoth
  * @since 1.3
  */
 public class ConfigSourceAdapter implements ConfigSource {
-    private static String ARRAY_SEPARATOR_REGEX = "(?<!\\\\)" + Pattern.quote(",") + "\\s";    
-
     private ConfigurationSource configurationSource;
 
     public ConfigSourceAdapter(ConfigurationSource configurationSource) {
@@ -62,10 +61,12 @@ public class ConfigSourceAdapter implements ConfigSource {
     @Override
     public String getValue(String s) {
     	String val = configurationSource.get(s).orElse(null);
-    	
-    	if (configurationSource.getListSize(s).orElse(0) > 0) {
-    		//this is a list or an array and leading/trailing "[", "]" as well as \\s after "," must be removed
-    		return val.subSequence(1, val.length() - 1).toString().replaceAll(ARRAY_SEPARATOR_REGEX, ",");
+        Optional<Integer> listSize = this.configurationSource.getListSize(s);
+        
+        //this is a list or an array
+    	if (listSize.isPresent()) {
+    		//we ignore the returned value and build the array
+            return buildArray(s, listSize.get());
     	}
     	
         return val;
@@ -103,4 +104,35 @@ public class ConfigSourceAdapter implements ConfigSource {
             }
         }
     }
+	
+	private String buildArray(String propertyName, int size) {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < size; i++) {
+			String prefix = String.format("%s[%d]", propertyName, i);
+	        Optional<List<String>> objectKeys = this.configurationSource.getMapKeys(prefix);
+
+	        //array item is an object, so we just toString() it
+	        if (objectKeys.isPresent()) {
+	            Map<String, String> map = new HashMap<>();
+	        	buildPropertiesMap(map, prefix);
+	        	
+	    		Map<String, String> object =
+	    				map.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().substring(prefix.length() + 1),
+	    						e -> e.getValue()));
+	        	
+	        	sb.append(object.toString().replaceAll(",", "\\\\,"));
+	        }
+	        else {
+				Optional<String> item = this.configurationSource.get(String.format("%s[%d]", propertyName, i));
+				item.ifPresent(sb::append);
+	        }
+			
+			if (i < size - 1) {
+				sb.append(',');
+			}
+		}
+		
+		return sb.toString();
+	}	
 }

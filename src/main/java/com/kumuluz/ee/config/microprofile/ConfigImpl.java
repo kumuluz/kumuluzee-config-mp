@@ -20,20 +20,25 @@
 */
 package com.kumuluz.ee.config.microprofile;
 
-import com.kumuluz.ee.config.microprofile.converters.ImplicitConverter;
-import com.kumuluz.ee.config.microprofile.utils.AlternativeTypesUtil;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.spi.ConfigSource;
-import org.eclipse.microprofile.config.spi.Converter;
-
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.spi.ConfigSource;
+import org.eclipse.microprofile.config.spi.Converter;
+
+import com.kumuluz.ee.config.microprofile.converters.ImplicitConverter;
+import com.kumuluz.ee.config.microprofile.utils.AlternativeTypesUtil;
 
 /**
  * Microprofile Config implementation that exposes KumuluzEE configuration framework.
@@ -164,12 +169,6 @@ public class ConfigImpl implements Config, Serializable {
 	 * @return stream of property names, never null
 	 */
 	private Stream<String> asStream(ConfigSource arg0) {
-		try {
-			return arg0.getPropertyNames().stream();
-		}
-		catch (Exception e) {
-			logger.warning("Config source " + arg0.getName() + " reported exception: " + e.getMessage());
-			return Collections.EMPTY_SET.stream();
-		}
+		return arg0.getPropertyNames().stream();
 	}
 }
