@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigSource;
@@ -155,20 +154,11 @@ public class ConfigImpl implements Config, Serializable {
 
 	@Override
 	public Iterable<String> getPropertyNames() {
-		return this.configSources.stream().flatMap(this::asStream).collect(Collectors.toSet());
+		return this.configSources.stream().flatMap(e -> e.getPropertyNames().stream()).collect(Collectors.toSet());
 	}
 
 	@Override
 	public Iterable<ConfigSource> getConfigSources() {
 		return this.configSources;
-	}
-
-	/**
-	 * Streams this config source as property names
-	 * @param arg0 config source to stream
-	 * @return stream of property names, never null
-	 */
-	private Stream<String> asStream(ConfigSource arg0) {
-		return arg0.getPropertyNames().stream();
 	}
 }

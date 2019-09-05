@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.spi.ConfigSource;
 
@@ -61,12 +60,15 @@ public class ConfigSourceAdapter implements ConfigSource {
     @Override
     public String getValue(String s) {
     	String val = configurationSource.get(s).orElse(null);
-        Optional<Integer> listSize = this.configurationSource.getListSize(s);
-        
-        //this is a list or an array
-    	if (listSize.isPresent()) {
-    		//we ignore the returned value and build the array
-            return buildArray(s, listSize.get());
+    	
+    	if (val != null) {
+	        Optional<Integer> listSize = this.configurationSource.getListSize(s);
+	        
+	        //this is a list or an array
+	    	if (listSize.isPresent()) {
+	    		//we ignore the returned value and build the array
+	            return buildArray(s, listSize.get());
+	    	}
     	}
     	
         return val;
@@ -112,16 +114,9 @@ public class ConfigSourceAdapter implements ConfigSource {
 			String prefix = String.format("%s[%d]", propertyName, i);
 	        Optional<List<String>> objectKeys = this.configurationSource.getMapKeys(prefix);
 
-	        //array item is an object, so we just toString() it
+	        //array item is an object, so we just omit it
 	        if (objectKeys.isPresent()) {
-	            Map<String, String> map = new HashMap<>();
-	        	buildPropertiesMap(map, prefix);
-	        	
-	    		Map<String, String> object =
-	    				map.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().substring(prefix.length() + 1),
-	    						e -> e.getValue()));
-	        	
-	        	sb.append(object.toString().replaceAll(",", "\\\\,"));
+	        	sb.append("");
 	        }
 	        else {
 				Optional<String> item = this.configurationSource.get(String.format("%s[%d]", propertyName, i));

@@ -76,7 +76,7 @@ public class ArrayInjectionTest extends Arquillian {
 	private String arrayItemParam;
 	
 	private static final String[] TEST_TARGET =
-			new String[]{"one ", " two", " [three, four] ", "{five.six=seven, five.eight=nine}"};
+			new String[]{"one ", " two", " [three, four] "};
 	
     @Test
     public void testNotParsingDelimeters() {
