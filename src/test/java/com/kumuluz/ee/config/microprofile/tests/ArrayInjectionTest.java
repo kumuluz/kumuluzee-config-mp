@@ -17,14 +17,8 @@
  *  out of or in connection with the software or the use or other dealings in the
  *  software. See the License for the specific language governing permissions and
  *  limitations under the License.
-*/
+ */
 package com.kumuluz.ee.config.microprofile.tests;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import javax.inject.Inject;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -35,15 +29,43 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * Tests that check MP Config array/list injection from KumuluzEE's config.yaml
- * 
+ *
  * @author Yog Sothoth
  * @since 1.4
- *
  */
 @Test
 public class ArrayInjectionTest extends Arquillian {
+
+    private static final String[] TEST_TARGET =
+            new String[]{"one ", " two", " [three, four] "};
+
+    @Inject
+    @ConfigProperty(name = "parameter.arrayParameter")
+    private List<String> listParam;
+
+    @Inject
+    @ConfigProperty(name = "parameter.arrayParameter")
+    private String[] arrayParam;
+
+    @Inject
+    @ConfigProperty(name = "parameter.arrayParameter")
+    private Optional<String[]> arrayParamOpt;
+
+    @Inject
+    @ConfigProperty(name = "parameter.stringParameter")
+    private Optional<String> stringParam;
+
+    @Inject
+    @ConfigProperty(name = "parameter.arrayParameter[0]")
+    private String arrayItemParam;
+
     @Deployment
     public static JavaArchive deploy() {
         JavaArchive testJar = ShrinkWrap
@@ -52,50 +74,27 @@ public class ArrayInjectionTest extends Arquillian {
                 .addAsResource("config.yaml")
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
                 .as(JavaArchive.class);
-            return testJar;
+        return testJar;
     }
 
-	@Inject
-	@ConfigProperty(name="parameter.arrayParameter")
-	private List<String> listParam;
-
-	@Inject
-	@ConfigProperty(name="parameter.arrayParameter")
-	private String[] arrayParam;
-
-	@Inject
-	@ConfigProperty(name="parameter.arrayParameter")
-	private Optional<String[]> arrayParamOpt;
-
-	@Inject
-	@ConfigProperty(name="parameter.stringParameter")
-	private Optional<String> stringParam;
-
-	@Inject
-	@ConfigProperty(name="parameter.arrayParameter[0]")
-	private String arrayItemParam;
-	
-	private static final String[] TEST_TARGET =
-			new String[]{"one ", " two", " [three, four] "};
-	
     @Test
     public void testNotParsingDelimeters() {
-		Assert.assertEquals("[here be,  dragons]", stringParam.get());
+        Assert.assertEquals("[here be,  dragons]", stringParam.get());
     }
 
     @Test
     public void testArrayItemInjection() {
-    	Assert.assertEquals(TEST_TARGET[0], arrayItemParam);
+        Assert.assertEquals(TEST_TARGET[0], arrayItemParam);
     }
 
     @Test
     public void testArrayInjection() {
-		Assert.assertEquals(TEST_TARGET, arrayParamOpt.get());
-		Assert.assertEquals(TEST_TARGET, arrayParam);
+        Assert.assertEquals(TEST_TARGET, arrayParamOpt.get());
+        Assert.assertEquals(TEST_TARGET, arrayParam);
     }
-    
+
     @Test
     public void testListInjection() {
-		Assert.assertEquals(Arrays.asList(TEST_TARGET), listParam);
+        Assert.assertEquals(Arrays.asList(TEST_TARGET), listParam);
     }
 }
