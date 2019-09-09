@@ -20,22 +20,23 @@
  */
 package com.kumuluz.ee.config.microprofile.adapters;
 
-import com.kumuluz.ee.configuration.ConfigurationSource;
-import org.eclipse.microprofile.config.spi.ConfigSource;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.eclipse.microprofile.config.spi.ConfigSource;
+
+import com.kumuluz.ee.configuration.ConfigurationSource;
+
 /**
  * Adapts KumuluzEE configuration framework {@link ConfigurationSource} to MicroProfile Config {@link ConfigSource}.
  *
  * @author Urban Malc
+ * @author Yog Sothoth
  * @since 1.3
  */
 public class ConfigSourceAdapter implements ConfigSource {
-
     private ConfigurationSource configurationSource;
 
     public ConfigSourceAdapter(ConfigurationSource configurationSource) {
@@ -55,10 +56,22 @@ public class ConfigSourceAdapter implements ConfigSource {
     public int getOrdinal() {
         return configurationSource.getOrdinal();
     }
-
+    
     @Override
     public String getValue(String s) {
-        return configurationSource.get(s).orElse(null);
+    	String val = configurationSource.get(s).orElse(null);
+    	
+    	if (val != null) {
+	        Optional<Integer> listSize = this.configurationSource.getListSize(s);
+	        
+	        //this is a list or an array
+	    	if (listSize.isPresent()) {
+	    		//we ignore the returned value and build the array
+	            return buildArray(s, listSize.get());
+	    	}
+    	}
+    	
+        return val;
     }
 
     @Override
@@ -93,4 +106,28 @@ public class ConfigSourceAdapter implements ConfigSource {
             }
         }
     }
+	
+	private String buildArray(String propertyName, int size) {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < size; i++) {
+			String prefix = String.format("%s[%d]", propertyName, i);
+	        Optional<List<String>> objectKeys = this.configurationSource.getMapKeys(prefix);
+
+	        //array item is an object, so we just omit it
+	        if (objectKeys.isPresent()) {
+	        	sb.append("");
+	        }
+	        else {
+				Optional<String> item = this.configurationSource.get(String.format("%s[%d]", propertyName, i));
+				item.ifPresent(sb::append);
+	        }
+			
+			if (i < size - 1) {
+				sb.append(',');
+			}
+		}
+		
+		return sb.toString();
+	}	
 }

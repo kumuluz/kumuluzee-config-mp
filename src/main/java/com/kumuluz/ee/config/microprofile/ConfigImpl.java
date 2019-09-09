@@ -20,26 +20,35 @@
 */
 package com.kumuluz.ee.config.microprofile;
 
-import com.kumuluz.ee.config.microprofile.converters.ImplicitConverter;
-import com.kumuluz.ee.config.microprofile.utils.AlternativeTypesUtil;
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.eclipse.microprofile.config.spi.Converter;
 
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.Type;
-import java.util.*;
-import java.util.regex.Pattern;
+import com.kumuluz.ee.config.microprofile.converters.ImplicitConverter;
+import com.kumuluz.ee.config.microprofile.utils.AlternativeTypesUtil;
 
 /**
  * Microprofile Config implementation that exposes KumuluzEE configuration framework.
  *
  * @author Urban Malc
  * @author Jan Meznarič
+ * @author Yog Sothoth
  * @since 1.1
  */
 public class ConfigImpl implements Config, Serializable {
+	private static final Logger logger = Logger.getLogger(ConfigImpl.class.getCanonicalName());
 
     private Map<Type, Converter> converters;
     private List<ConfigSource> configSources;
@@ -111,7 +120,7 @@ public class ConfigImpl implements Config, Serializable {
 
     public <T> List<T> convertList(String value, Class<T> listType) {
 
-        String[] tokens = value.split(ARRAY_SEPARATOR_REGEX);
+		String[] tokens = value.split(ARRAY_SEPARATOR_REGEX);
 
         Converter<T> converter = getConverter(listType);
         List<T> convertedList = new ArrayList<>(tokens.length);
@@ -143,14 +152,13 @@ public class ConfigImpl implements Config, Serializable {
         return converter;
     }
 
+	@Override
+	public Iterable<String> getPropertyNames() {
+		return this.configSources.stream().flatMap(e -> e.getPropertyNames().stream()).collect(Collectors.toSet());
+	}
 
-    @Override
-    public Iterable<String> getPropertyNames() {
-        return null;
-    }
-
-    @Override
-    public Iterable<ConfigSource> getConfigSources() {
-        return this.configSources;
-    }
+	@Override
+	public Iterable<ConfigSource> getConfigSources() {
+		return this.configSources;
+	}
 }
