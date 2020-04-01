@@ -43,6 +43,9 @@ public class AlternativeTypesUtil {
         ALTERNATIVE_TYPES.put(long.class, Long.class);
         ALTERNATIVE_TYPES.put(float.class, Float.class);
         ALTERNATIVE_TYPES.put(double.class, Double.class);
+        ALTERNATIVE_TYPES.put(byte.class, Byte.class);
+        ALTERNATIVE_TYPES.put(char.class, Character.class);
+        ALTERNATIVE_TYPES.put(short.class, Short.class);
     }
 
     public static Optional<Type> getTypeFromPrimitive(Type primitive) {

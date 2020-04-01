@@ -45,7 +45,7 @@ import java.util.*;
  */
 public class ConfigBuilderImpl implements ConfigBuilder {
 
-    private static final List<Class> defaultSources = Arrays.asList(new Class[] {
+    private static final List<Class> defaultSources = Arrays.asList(new Class[]{
             SystemPropertyConfigurationSource.class,
             EnvironmentConfigurationSource.class,
             FileConfigurationSource.class
@@ -64,6 +64,9 @@ public class ConfigBuilderImpl implements ConfigBuilder {
         converters.put(Float.class, getConverterWithOrdinalAnnotation(FloatConverter.INSTANCE));
         converters.put(Double.class, getConverterWithOrdinalAnnotation(DoubleConverter.INSTANCE));
         converters.put(Class.class, getConverterWithOrdinalAnnotation(ClassConverter.INSTANCE));
+        converters.put(Character.class, getConverterWithOrdinalAnnotation(CharacterConverter.INSTANCE));
+        converters.put(Byte.class, getConverterWithOrdinalAnnotation(ByteConverter.INSTANCE));
+        converters.put(Short.class, getConverterWithOrdinalAnnotation(ShortConverter.INSTANCE));
     }
 
     @Override
@@ -120,7 +123,7 @@ public class ConfigBuilderImpl implements ConfigBuilder {
                     if (args.length == 1) {
                         Type cType = args[0];
                         int ordinal = getConverterOrdinal(converter);
-                        withConverter((Class)cType, ordinal, converter);
+                        withConverter((Class) cType, ordinal, converter);
                     }
                 }
             }
