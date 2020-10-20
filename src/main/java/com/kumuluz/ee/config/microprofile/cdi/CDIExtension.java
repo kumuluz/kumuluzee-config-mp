@@ -21,6 +21,7 @@
 package com.kumuluz.ee.config.microprofile.cdi;
 
 import com.kumuluz.ee.config.microprofile.ConfigImpl;
+import com.kumuluz.ee.config.microprofile.annotations.OptionalCollectionIP;
 import com.kumuluz.ee.config.microprofile.utils.AlternativeTypesUtil;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -28,6 +29,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.*;
+import javax.enterprise.util.AnnotationLiteral;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -43,21 +45,49 @@ import java.util.*;
 public class CDIExtension implements Extension {
 
     private static final Set<Type> IGNORED_TYPES = new HashSet<>();
+    private static final Set<Class<?>> SUPPORTED_COLLECTION_TYPES = new HashSet<>();
 
     static {
         // producers for following types are defined in com.kumuluz.ee.config.microprofile.cdi.ConfigInjectionProducer
         IGNORED_TYPES.add(Optional.class);
         IGNORED_TYPES.add(List.class);
         IGNORED_TYPES.add(Set.class);
+
+        SUPPORTED_COLLECTION_TYPES.add(List.class);
+        SUPPORTED_COLLECTION_TYPES.add(Set.class);
     }
 
-    private Set<InjectionPoint> injectionPoints = new HashSet<>();
+    private final Set<InjectionPoint> injectionPoints = new HashSet<>();
 
     public void collectConfigProducer(@Observes ProcessInjectionPoint<?, ?> pip) {
         ConfigProperty configProperty = pip.getInjectionPoint().getAnnotated().getAnnotation(ConfigProperty.class);
-        if (configProperty != null) {
-            injectionPoints.add(pip.getInjectionPoint());
+        if (configProperty == null) {
+            return;
         }
+        // add annotation if injection type is Optional<List<?>> or Optional<Set<?>>
+        if (isOptionalCollection(pip.getInjectionPoint().getType())) {
+            pip.configureInjectionPoint().addQualifier(new AnnotationLiteral<OptionalCollectionIP>() {});
+        }
+        injectionPoints.add(pip.getInjectionPoint());
+    }
+
+    /**
+     * Checks if type is {@literal Optional<List<?>>} or {@literal Optional<Set<?>>}
+     */
+    private boolean isOptionalCollection(Type type) {
+        if (type instanceof ParameterizedType &&
+                Optional.class.isAssignableFrom((Class<?>) ((ParameterizedType) type).getRawType())) {
+            Type innerType = ((ParameterizedType) type).getActualTypeArguments()[0];
+            if (innerType instanceof ParameterizedType) {
+                for (Class<?> collectionClass : SUPPORTED_COLLECTION_TYPES) {
+                    if (collectionClass.isAssignableFrom((Class<?>) ((ParameterizedType) innerType).getRawType())) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public void validateInjectionPoint(@Observes ProcessInjectionPoint<?, ?> pip) {
@@ -109,7 +139,7 @@ public class CDIExtension implements Extension {
                 HashSet<Type> types = new HashSet<>();
                 for (InjectionPoint ip : injectionPoints) {
                     Type t = ip.getType();
-                    if (t instanceof ParameterizedType) {
+                    while (t instanceof ParameterizedType) {
                         t = ((ParameterizedType) t).getActualTypeArguments()[0];
                     }
                     if (IGNORED_TYPES.contains(t)) {
