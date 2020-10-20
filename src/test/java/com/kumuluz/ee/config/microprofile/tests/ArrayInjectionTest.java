@@ -30,9 +30,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Tests that check MP Config array/list injection from KumuluzEE's config.yaml
@@ -52,11 +50,35 @@ public class ArrayInjectionTest extends Arquillian {
 
     @Inject
     @ConfigProperty(name = "parameter.arrayParameter")
+    private Set<String> setParam;
+
+    @Inject
+    @ConfigProperty(name = "parameter.arrayParameter")
     private String[] arrayParam;
 
     @Inject
     @ConfigProperty(name = "parameter.arrayParameter")
     private Optional<String[]> arrayParamOpt;
+
+    @Inject
+    @ConfigProperty(name = "parameter.non-existent")
+    private Optional<String[]> arrayParamEmptyOpt;
+
+    @Inject
+    @ConfigProperty(name = "parameter.arrayParameter")
+    private Optional<List<String>> listParamOpt;
+
+    @Inject
+    @ConfigProperty(name = "parameter.non-existent")
+    private Optional<List<String>> listParamEmptyOpt;
+
+    @Inject
+    @ConfigProperty(name = "parameter.arrayParameter")
+    private Optional<Set<String>> setParamOpt;
+
+    @Inject
+    @ConfigProperty(name = "parameter.non-existent")
+    private Optional<Set<String>> setParamEmptyOpt;
 
     @Inject
     @ConfigProperty(name = "parameter.stringParameter")
@@ -68,13 +90,12 @@ public class ArrayInjectionTest extends Arquillian {
 
     @Deployment
     public static JavaArchive deploy() {
-        JavaArchive testJar = ShrinkWrap
+        return ShrinkWrap
                 .create(JavaArchive.class, "arrayInjectionTest.jar")
                 .addClasses(ArrayInjectionTest.class)
                 .addAsResource("config.yaml")
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
                 .as(JavaArchive.class);
-        return testJar;
     }
 
     @Test
@@ -89,6 +110,7 @@ public class ArrayInjectionTest extends Arquillian {
 
     @Test
     public void testArrayInjection() {
+        Assert.assertTrue(arrayParamOpt.isPresent());
         Assert.assertEquals(TEST_TARGET, arrayParamOpt.get());
         Assert.assertEquals(TEST_TARGET, arrayParam);
     }
@@ -96,5 +118,23 @@ public class ArrayInjectionTest extends Arquillian {
     @Test
     public void testListInjection() {
         Assert.assertEquals(Arrays.asList(TEST_TARGET), listParam);
+
+        Assert.assertTrue(listParamOpt.isPresent());
+        Assert.assertEquals(Arrays.asList(TEST_TARGET), listParamOpt.get());
+    }
+
+    @Test
+    public void testSetInjection() {
+        Assert.assertEquals(new HashSet<>(Arrays.asList(TEST_TARGET)), setParam);
+
+        Assert.assertTrue(setParamOpt.isPresent());
+        Assert.assertEquals(new HashSet<>(Arrays.asList(TEST_TARGET)), setParamOpt.get());
+    }
+
+    @Test
+    public void testEmptyOptionalInjection() {
+        Assert.assertFalse(arrayParamEmptyOpt.isPresent());
+        Assert.assertFalse(listParamEmptyOpt.isPresent());
+        Assert.assertFalse(setParamEmptyOpt.isPresent());
     }
 }
