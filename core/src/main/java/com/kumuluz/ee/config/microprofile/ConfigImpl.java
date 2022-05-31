@@ -23,13 +23,13 @@ package com.kumuluz.ee.config.microprofile;
 import com.kumuluz.ee.config.microprofile.converters.ArrayConverter;
 import com.kumuluz.ee.config.microprofile.converters.ImplicitConverter;
 import com.kumuluz.ee.config.microprofile.utils.AlternativeTypesUtil;
+import com.kumuluz.ee.configuration.utils.ConfigurationInterpolationUtil;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigValue;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.eclipse.microprofile.config.spi.Converter;
 
-import javax.enterprise.inject.spi.InjectionPoint;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
@@ -48,10 +48,21 @@ public class ConfigImpl implements Config, Serializable {
 
     private final Map<Type, Converter<?>> converters;
     private final List<ConfigSource> configSources;
+    private Boolean resolveInterpolations = null;
+
+    private List<String> configurationProfiles;
 
     public ConfigImpl(List<ConfigSource> configSources, Map<Type, Converter<?>> converters) {
         this.configSources = Collections.unmodifiableList(configSources);
         this.converters = converters;
+
+        this.configurationProfiles = Collections.emptyList();
+        this.configurationProfiles = getOptionalValue("kumuluzee.config.profile", String.class)
+                .or(() -> getOptionalValue("mp.config.profile", String.class))
+                .map(s -> s.split(","))
+                .map(Arrays::asList)
+                .orElse(Collections.emptyList());
+        Collections.reverse(this.configurationProfiles);
     }
 
     public <T> Optional<T> getOptionalValue(String propertyName, Class<T> asType, String defaultValue) {
@@ -133,24 +144,56 @@ public class ConfigImpl implements Config, Serializable {
         return valueOpt.get();
     }
 
-    @Override
-    public ConfigValue getConfigValue(String propertyName) {
+    public ConfigValue getConfigValue(String propertyName, boolean resolveInterpolations) {
 
+        String rawValue = null;
         String value = null;
         String configSourceName = null;
         int configSourceOrdinal = 0;
 
         for (ConfigSource cs : this.configSources) {
-            value = cs.getValue(propertyName);
 
-            if (value != null) {
+            for (String profile : this.configurationProfiles) {
+                rawValue = cs.getValue("%" + profile + "." + propertyName);
+
+                if (rawValue != null) {
+                    break;
+                }
+            }
+
+            if (rawValue == null) {
+                rawValue = cs.getValue(propertyName);
+            }
+
+            if (rawValue != null) {
                 configSourceName = cs.getName();
                 configSourceOrdinal = cs.getOrdinal();
+
+                if (resolveInterpolations) {
+                    value = ConfigurationInterpolationUtil.interpolateString(rawValue,
+                            s -> Optional.ofNullable(this.getConfigValue(s, false).getValue())
+                    );
+                } else {
+                    value = rawValue;
+                }
                 break;
             }
         }
 
-        return new ConfigValueImpl(propertyName, value, value, configSourceName, configSourceOrdinal);
+        return new ConfigValueImpl(propertyName, value, rawValue, configSourceName, configSourceOrdinal);
+    }
+
+    @Override
+    public ConfigValue getConfigValue(String propertyName) {
+
+        if (this.resolveInterpolations == null) {
+            this.resolveInterpolations = false;
+            this.resolveInterpolations = this
+                    .getOptionalValue("mp.config.property.expressions.enabled", boolean.class)
+                    .orElse(true);
+        }
+
+        return getConfigValue(propertyName, this.resolveInterpolations);
     }
 
     @SuppressWarnings("unchecked")

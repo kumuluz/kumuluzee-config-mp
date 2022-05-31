@@ -1,0 +1,19 @@
+kumuluzee:
+  config:
+    profile: docker,prod
+
+override1: root
+override2: root
+override3: root
+
+"%docker":
+   dockervalue: docker
+   override1: fromdocker
+   override2: fromdocker
+
+"%prod":
+   prodvalue: prod
+   override1: fromprod
+
+"%test":
+   testvalue: test

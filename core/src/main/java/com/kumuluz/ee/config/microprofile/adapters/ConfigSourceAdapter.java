@@ -70,6 +70,9 @@ public class ConfigSourceAdapter implements ConfigSource {
         String val = configurationSource.get(s).orElse(null);
 
         if (val != null) {
+            return val;
+        } else {
+            // try list
             Optional<Integer> listSize = this.configurationSource.getListSize(s);
 
             //this is a list or an array
@@ -79,7 +82,7 @@ public class ConfigSourceAdapter implements ConfigSource {
             }
         }
 
-        return val;
+        return null;
     }
 
     @Override
