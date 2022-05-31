@@ -10,13 +10,17 @@ import javax.enterprise.inject.spi.DeploymentException;
 import javax.enterprise.inject.spi.InjectionPoint;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 
 public class ConfigPropertiesProducer {
 
     @Dependent
     @ConfigProperties
-    public static Object getGenericPropertiesObject(InjectionPoint ip) {
+    public static Object getGenericPropertiesObjectIP(InjectionPoint ip) {
 
         Class<?> propertiesObjectType = (Class<?>) ip.getType();
 
@@ -31,7 +35,7 @@ public class ConfigPropertiesProducer {
     }
 
     public static Object getGenericPropertiesObject(Class<?> propertiesObjectType,
-                                                     Optional<String> configPropertiesPrefixOverride) {
+                                                    Optional<String> configPropertiesPrefixOverride) {
 
         Optional<String> configPropertiesPrefix = configPropertiesPrefixOverride.or(
                 () -> Optional.ofNullable(propertiesObjectType.getAnnotation(ConfigProperties.class))
@@ -48,8 +52,7 @@ public class ConfigPropertiesProducer {
             return propertiesObject;
 
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            e.printStackTrace();
-            return null;
+            throw new DeploymentException("Could not instantiate a @ConfigProperties object " + propertiesObjectType, e);
         }
     }
 
@@ -86,31 +89,65 @@ public class ConfigPropertiesProducer {
 
             if (valueToAssign != null) {
 
-                if (!field.canAccess(propertiesObject)) {
-                    field.setAccessible(true);
-                }
-
-                field.set(propertiesObject, valueToAssign);
+                setField(field, propertiesObject, valueToAssign);
             } else {
 
                 // check if default value is set directly on field
-                if (!field.canAccess(propertiesObject)) {
-                    field.setAccessible(true);
-                }
-
-                if (field.get(propertiesObject) != null) {
+                if (getField(field, propertiesObject) != null) {
                     // default value is already set
                     continue;
                 }
 
                 if (Optional.class.equals(field.getType())) {
-                    field.set(propertiesObject, Optional.empty());
+                    setField(field, propertiesObject, Optional.empty());
+                } else if (OptionalInt.class.equals(field.getType())) {
+                    setField(field, propertiesObject, OptionalInt.empty());
+                } else if (OptionalLong.class.equals(field.getType())) {
+                    setField(field, propertiesObject, OptionalLong.empty());
+                } else if (OptionalDouble.class.equals(field.getType())) {
+                    setField(field, propertiesObject, OptionalDouble.empty());
                 } else {
 
                     throw new DeploymentException("Microprofile Config Property " + actualPrefix + fieldPropertyName +
                             " can not be found.");
                 }
             }
+        }
+    }
+
+    private static Object getField(Field field, Object fieldObject) throws IllegalAccessException {
+
+        try {
+            String getterName = "get" + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1);
+            Method getter = fieldObject.getClass().getDeclaredMethod(getterName);
+
+            if (getter.getReturnType().equals(field.getType())) {
+                return getter.invoke(fieldObject);
+            }
+        } catch (Exception ignored) {
+        }
+
+        // access via getter failed, try directly via field
+        if (!field.canAccess(fieldObject)) {
+            field.setAccessible(true);
+        }
+        return field.get(fieldObject);
+    }
+
+    private static void setField(Field field, Object fieldObject, Object value) throws IllegalAccessException {
+
+        try {
+            String setterName = "set" + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1);
+            Method setter = fieldObject.getClass().getDeclaredMethod(setterName, field.getType());
+
+            setter.invoke(fieldObject, value);
+        } catch (Exception e) {
+
+            // access via setter failed, try directly via field
+            if (!field.canAccess(fieldObject)) {
+                field.setAccessible(true);
+            }
+            field.set(fieldObject, value);
         }
     }
 }

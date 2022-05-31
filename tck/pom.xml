@@ -54,11 +54,6 @@
             <artifactId>hamcrest-all</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.beust</groupId>
-            <artifactId>jcommander</artifactId>
-            <version>1.48</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -91,7 +86,6 @@
                     </environmentVariables>
                     <systemProperties>
                         <!-- required by TCK -->
-                        <mp.tck.prop.dummy>dummy</mp.tck.prop.dummy>
                         <config_ordinal>120</config_ordinal>
                         <customer.hobby>Tennis</customer.hobby>
                     </systemProperties>

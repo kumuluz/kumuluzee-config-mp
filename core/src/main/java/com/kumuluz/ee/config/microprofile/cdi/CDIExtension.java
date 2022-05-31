@@ -96,21 +96,18 @@ public class CDIExtension implements Extension {
             return;
         }
 
-        if (!ConfigPropertiesProducer.class.equals(pba.getAnnotated().getBaseType())) {
+        // veto existing beans, because dynamic producers are added by this extension
+        pba.veto();
 
-            // veto existing beans, because dynamic producers are added by this extension
-            pba.veto();
-
-            // validate bean
-            try {
-                ConfigPropertiesProducer.getGenericPropertiesObject((Class<?>) pba.getAnnotated().getBaseType(),
-                        Optional.empty());
-            } catch (Throwable t) {
-                Class<?> failingClass = (Class<?>) pba.getAnnotated().getBaseType();
-                DEPLOYMENT_EXCEPTIONS.add(new DeploymentException("Deploment Failure for ConfigProperties with prefix '" +
-                        configProperties.prefix() + "' in class " + failingClass.getCanonicalName() + " Reason "
-                        + t.getMessage(), t));
-            }
+        // validate bean
+        try {
+            ConfigPropertiesProducer.getGenericPropertiesObject((Class<?>) pba.getAnnotated().getBaseType(),
+                    Optional.empty());
+        } catch (Throwable t) {
+            Class<?> failingClass = (Class<?>) pba.getAnnotated().getBaseType();
+            DEPLOYMENT_EXCEPTIONS.add(new DeploymentException("Deploment Failure for ConfigProperties with prefix '" +
+                    configProperties.prefix() + "' in class " + failingClass.getCanonicalName() + " Reason "
+                    + t.getMessage(), t));
         }
     }
 
@@ -171,7 +168,7 @@ public class CDIExtension implements Extension {
 
         if (configPropertiesAnnotation != null) {
             try {
-                ConfigPropertiesProducer.getGenericPropertiesObject(ip);
+                ConfigPropertiesProducer.getGenericPropertiesObjectIP(ip);
             } catch (Throwable t) {
                 Class<?> failingClass;
                 Bean<?> bean = ip.getBean();
@@ -180,7 +177,7 @@ public class CDIExtension implements Extension {
                 } else {
                     failingClass = ip.getBean().getBeanClass();
                 }
-                DEPLOYMENT_EXCEPTIONS.add(new DeploymentException("Deploment Failure for ConfigProperties " +
+                DEPLOYMENT_EXCEPTIONS.add(new DeploymentException("Deployment Failure for ConfigProperties " +
                         configPropertiesAnnotation.prefix() + " in class " + failingClass.getCanonicalName() + " Reason "
                         + t.getMessage(), t));
             }
@@ -247,7 +244,7 @@ public class CDIExtension implements Extension {
 
             AnnotatedMethod<? super ConfigPropertiesProducer> annotatedMethod = null;
             for (AnnotatedMethod<? super ConfigPropertiesProducer> m : annotatedType.getMethods()) {
-                if (m.getJavaMember().getName().equals("getGenericPropertiesObject")) {
+                if (m.getJavaMember().getName().equals("getGenericPropertiesObjectIP")) {
                     beanAttributes = bm.createBeanAttributes(m);
                     annotatedMethod = m;
                     break;
@@ -256,27 +253,13 @@ public class CDIExtension implements Extension {
 
             if (beanAttributes != null) {
 
-                Set<Type> types = new HashSet<>();
                 for (InjectionPoint ip : injectionPointsProperties) {
-                    Type t = ip.getType();
-                    while (t instanceof ParameterizedType) {
-                        t = ((ParameterizedType) t).getActualTypeArguments()[0];
-                    }
-                    if (IGNORED_TYPES.contains(t)) {
-                        continue;
-                    }
-                    // ignore primitive types, since CDI already correctly maps them
-                    // this ensures that producers don't overlap (e.g. one for boolean.class and one for Boolean.class)
-                    types.add(AlternativeTypesUtil.getTypeFromPrimitive(t).orElse(t));
-                }
-
-                for (final Type propertiesObjectType : types) {
 
                     Bean<?> bean = bm.createBean(new TypesBeanAttributes<>(beanAttributes) {
 
                         @Override
                         public Set<Type> getTypes() {
-                            return Collections.singleton(propertiesObjectType);
+                            return Collections.singleton(ip.getType());
                         }
                     }, ConfigPropertiesProducer.class, bm.getProducerFactory(annotatedMethod, null));
                     event.addBean(bean);
