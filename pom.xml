@@ -5,8 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.kumuluz.ee.config</groupId>
-    <artifactId>kumuluzee-config-mp</artifactId>
-    <version>1.5.0-SNAPSHOT</version>
+    <artifactId>kumuluzee-config-mp-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>2.0.0-SNAPSHOT</version>
+    <modules>
+    	<module>core</module>
+        <module>tck</module>
+    </modules>
 
     <name>KumuluzEE Config MicroProfile</name>
 
@@ -18,21 +23,22 @@
     <url>https://ee.kumuluz.com</url>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <kumuluzee.version>3.8.0</kumuluzee.version>
+        <kumuluzee.version>4.1.0-SNAPSHOT</kumuluzee.version>
 
-        <microprofile-config.version>1.4</microprofile-config.version>
+        <microprofile-config.version>2.0</microprofile-config.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <testng.version>6.9.9</testng.version>
-        <kumuluzee-arquillian-container.version>1.1.0</kumuluzee-arquillian-container.version>
+        <testng.version>6.14.3</testng.version>
+        <arquillian.version>1.6.0.Final</arquillian.version>
+        <kumuluzee-arquillian-container.version>1.1.1</kumuluzee-arquillian-container.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <nexus.staging.plugin.version>1.6.8</nexus.staging.plugin.version>
         <gpg.plugin.version>1.6</gpg.plugin.version>
-        <surefire.plugin.version>2.22.1</surefire.plugin.version>
+        <surefire.plugin.version>2.22.2</surefire.plugin.version>
     </properties>
 
     <scm>
@@ -72,66 +78,57 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.kumuluz.ee.config</groupId>
+                <artifactId>kumuluzee-config-mp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.kumuluz.ee</groupId>
                 <artifactId>kumuluzee-bom</artifactId>
                 <version>${kumuluzee.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.jboss.arquillian</groupId>
+                <artifactId>arquillian-bom</artifactId>
+                <version>${arquillian.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.microprofile.config</groupId>
+                <artifactId>microprofile-config-api</artifactId>
+                <version>${microprofile-config.version}</version>
+            </dependency>
+
+            <!-- Test Dependencies -->
+            <dependency>
+                <groupId>org.eclipse.microprofile.config</groupId>
+                <artifactId>microprofile-config-tck</artifactId>
+                <version>${microprofile-config.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>${testng.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.kumuluz.ee.testing</groupId>
+                <artifactId>kumuluzee-arquillian-container</artifactId>
+                <version>${kumuluzee-arquillian-container.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest-all</artifactId>
+                <version>${hamcrest.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.kumuluz.ee</groupId>
-            <artifactId>kumuluzee-common</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.kumuluz.ee</groupId>
-            <artifactId>kumuluzee-cdi-weld</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.microprofile.config</groupId>
-            <artifactId>microprofile-config-api</artifactId>
-            <version>${microprofile-config.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.microprofile.config</groupId>
-            <artifactId>microprofile-config-tck</artifactId>
-            <version>${microprofile-config.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${testng.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.kumuluz.ee.testing</groupId>
-            <artifactId>kumuluzee-arquillian-container</artifactId>
-            <version>${kumuluzee-arquillian-container.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <version>${hamcrest.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
     <build>
-        <testResources>
-            <testResource>
-                <directory>src/test/resources/</directory>
-                <filtering>true</filtering>
-            </testResource>
-        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
@@ -142,24 +139,6 @@
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire.plugin.version}</version>
-                <configuration>
-                    <suiteXmlFiles>
-                        <suiteXmlFile>tck-suite.xml</suiteXmlFile>
-                    </suiteXmlFiles>
-                    <environmentVariables>
-                        <lowercase>test123</lowercase> <!-- test if lowercase key is accepted -->
-                        <!-- required by TCK -->
-                        <my_int_property>45</my_int_property>
-                        <MY_BOOLEAN_PROPERTY>true</MY_BOOLEAN_PROPERTY>
-                        <my_string_property>haha</my_string_property>
-                        <MY_STRING_PROPERTY>woohoo</MY_STRING_PROPERTY>
-                    </environmentVariables>
                 </configuration>
             </plugin>
         </plugins>
