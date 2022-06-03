@@ -1,5 +1,5 @@
 # KumuluzEE MicroProfile Config
-[![Build Status](https://img.shields.io/travis/kumuluz/kumuluzee-config-mp/master.svg?style=flat)](https://travis-ci.org/kumuluz/kumuluzee-config-mp)
+[![KumuluzEE CI](https://github.com/kumuluz/kumuluzee-config-mp/actions/workflows/kumuluzee-ci.yml/badge.svg)](https://github.com/kumuluz/kumuluzee-config-mp/actions/workflows/kumuluzee-ci.yml)
 
 > KumuluzEE Config MicroProfile extension provides you with a complete Eclipse MicroProfile Feature implementation for configuring your applications.
 
