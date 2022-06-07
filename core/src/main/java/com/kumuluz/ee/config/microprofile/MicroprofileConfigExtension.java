@@ -46,14 +46,14 @@ import java.util.logging.Logger;
 @EeExtensionDef(name = "MicroProfile", group = EeExtensionGroup.CONFIG)
 public class MicroprofileConfigExtension implements ConfigExtension {
 
-    private static final Logger log = Logger.getLogger(MicroprofileConfigExtension.class.getName());
+    private static final Logger LOG = Logger.getLogger(MicroprofileConfigExtension.class.getName());
 
     private List<ConfigurationSource> configurationSources;
 
     @Override
     public void init(KumuluzServerWrapper kumuluzServerWrapper, EeConfig eeConfig) {
 
-        log.info("Initialising MicroProfile configuration sources.");
+        LOG.info("Initialising MicroProfile configuration sources.");
 
         configurationSources = new LinkedList<>();
 
@@ -76,11 +76,6 @@ public class MicroprofileConfigExtension implements ConfigExtension {
     @Override
     public List<ConfigurationSource> getConfigurationSources() {
         return configurationSources;
-    }
-
-    @Override
-    public ConfigurationSource getConfigurationSource() {
-        return null;
     }
 
     @Override
