@@ -22,7 +22,8 @@ package com.kumuluz.ee.config.microprofile.converters;
 
 import org.eclipse.microprofile.config.spi.Converter;
 
-import javax.annotation.Priority;
+import jakarta.annotation.Priority;
+
 import java.util.OptionalDouble;
 
 /**

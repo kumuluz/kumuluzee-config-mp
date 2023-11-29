@@ -29,12 +29,12 @@ import com.kumuluz.ee.configuration.sources.EnvironmentConfigurationSource;
 import com.kumuluz.ee.configuration.sources.FileConfigurationSource;
 import com.kumuluz.ee.configuration.sources.SystemPropertyConfigurationSource;
 import com.kumuluz.ee.configuration.utils.ConfigurationUtil;
+import jakarta.annotation.Priority;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigBuilder;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 import org.eclipse.microprofile.config.spi.Converter;
 
-import javax.annotation.Priority;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

@@ -17,21 +17,21 @@
  *  out of or in connection with the software or the use or other dealings in the
  *  software. See the License for the specific language governing permissions and
  *  limitations under the License.
-*/
+ */
 package com.kumuluz.ee.config.microprofile.cdi;
 
 import com.kumuluz.ee.config.microprofile.ConfigImpl;
 import com.kumuluz.ee.config.microprofile.annotations.OptionalCollectionIP;
 import com.kumuluz.ee.config.microprofile.utils.AlternativeTypesUtil;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.spi.*;
+import jakarta.enterprise.util.AnnotationLiteral;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.ConfigValue;
 import org.eclipse.microprofile.config.inject.ConfigProperties;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.*;
-import javax.enterprise.util.AnnotationLiteral;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -73,7 +73,8 @@ public class CDIExtension implements Extension {
         }
         // add annotation if injection type is Optional<List<?>> or Optional<Set<?>>
         if (isOptionalCollection(pip.getInjectionPoint().getType())) {
-            pip.configureInjectionPoint().addQualifier(new AnnotationLiteral<OptionalCollectionIP>() {});
+            pip.configureInjectionPoint().addQualifier(new AnnotationLiteral<OptionalCollectionIP>() {
+            });
         }
         injectionPoints.add(pip.getInjectionPoint());
     }

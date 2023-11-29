@@ -20,9 +20,8 @@
  */
 package com.kumuluz.ee.config.microprofile.converters;
 
+import jakarta.annotation.Priority;
 import org.eclipse.microprofile.config.spi.Converter;
-
-import javax.annotation.Priority;
 
 /**
  * Short converter.
